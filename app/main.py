@@ -1,73 +1,53 @@
 """
-main.py — Application entry point.
-
-Creates the root Tk window, wires up the controller and views, then starts
-the main event loop.
+app/main.py — Application primary launcher bootstrap entry hook file.
 """
 
 from __future__ import annotations
 
 import logging
-import tkinter as tk
-import tkinter.ttk as ttk
 
-import config
-from controllers import AppController
-from views.dashboard_view import DashboardView
-from views.login_view import LoginView
+from app.controllers.auth_controller import AuthController
+from app.controllers.base_controller import AppCoordinator
+from app.controllers.fleet_controller import FleetController
+from app.views.dashboard_view import DashboardView
+from app.views.login_view import LoginView
+from app.views.root_window import RootWindow
 
 
 def setup_logging() -> None:
+    """Configures systemic output presentation patterns."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
     )
 
 
-def apply_global_theme(root: tk.Tk) -> None:
-    """Configure root window and global ttk theme defaults."""
-    root.configure(bg=config.COLOR_BG_DARK)
-    style = ttk.Style(root)
-    style.theme_use("clam")
-    style.configure(".", background=config.COLOR_BG_DARK, foreground=config.COLOR_FG_PRIMARY)
-    style.configure(
-        "Vertical.TScrollbar",
-        troughcolor=config.COLOR_BG_PANEL,
-        background=config.COLOR_BORDER,
-        borderwidth=0,
-        arrowsize=12,
-    )
-    style.configure(
-        "Horizontal.TScrollbar",
-        troughcolor=config.COLOR_BG_PANEL,
-        background=config.COLOR_BORDER,
-        borderwidth=0,
-        arrowsize=12,
-    )
-
-
 def main() -> None:
+    """Initializes central layout components, pairs dependencies, and boots the main loop."""
     setup_logging()
 
-    root = tk.Tk()
-    root.title(config.APP_TITLE)
-    root.geometry(f"{config.WINDOW_WIDTH}x{config.WINDOW_HEIGHT}")
-    root.minsize(config.WINDOW_MIN_WIDTH, config.WINDOW_MIN_HEIGHT)
+    # 1. Instantiate master Tk container object window frame
+    root = RootWindow()
 
-    # Centre window on screen
-    root.update_idletasks()
-    x = (root.winfo_screenwidth() - config.WINDOW_WIDTH) // 2
-    y = (root.winfo_screenheight() - config.WINDOW_HEIGHT) // 2
-    root.geometry(f"+{x}+{y}")
+    # 2. Instantiate runtime supervisor system state coordinators
+    coordinator = AppCoordinator(root)
 
-    apply_global_theme(root)
+    # 3. Instantiate sub-controllers passing state handles
+    auth_controller = AuthController(coordinator)
+    fleet_controller = FleetController(coordinator)
 
-    # Dependency injection: controller owns state; views hold a reference back
-    controller = AppController(root)
-    LoginView(root, controller)
-    dashboard = DashboardView(root, controller)
-    dashboard.hide()  # ensure app always starts on the login screen
+    # 4. Build isolated UI layout widgets, injecting sub-controllers
+    login_view = LoginView(root, auth_controller)
+    dashboard_view = DashboardView(root, fleet_controller)
 
+    # 5. Wire layout pointers backwards onto supervisor coordinators
+    coordinator.login_view = login_view
+    coordinator.dashboard_view = dashboard_view
+
+    # Launch application presentation window
+    login_view.show()
+
+    # Hand off system execution thread context down to Tkinter engine loops
     root.mainloop()
 
 

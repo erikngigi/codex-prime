@@ -1,39 +1,35 @@
 """
-config.py — Centralised configuration: API endpoints, timeouts, and theme constants.
+app/config.py — Centralized static context metrics, themes, and configuration flags.
 """
 
-# ---------------------------------------------------------------------------
-# API
-# ---------------------------------------------------------------------------
-BASE_URL: str = "https://api.roadsmartspeedtracker.com"  # ← replace with real host
+# ── API Properties ────────────────────────────────────────────────
+BASE_URL: str = "https://api.roadsmartspeedtracker.com"
 LOGIN_ENDPOINT: str = f"{BASE_URL}/auth/login"
 CERTIFICATES_ENDPOINT: str = f"{BASE_URL}/certificates"
+FLEET_RESET_ENDPOINT: str = f"{BASE_URL}/vehicles/reset-lookup"
 REQUEST_TIMEOUT: int = 10  # seconds
 
-# ---------------------------------------------------------------------------
-# Theme
-# ---------------------------------------------------------------------------
-COLOR_BG_DARK: str = "#0D1B2A"  # deep navy — primary background
-COLOR_BG_PANEL: str = "#112233"  # slightly lighter panel background
-COLOR_BG_ROW_ALT: str = "#0A1828"  # alternating treeview row tint
-COLOR_ACCENT: str = "#F5C842"  # crisp yellow — highlights / active
-COLOR_FG_PRIMARY: str = "#FFFFFF"  # primary text
-COLOR_FG_MUTED: str = "#8BAABE"  # secondary / muted text
-COLOR_ERROR: str = "#FF5C5C"  # inline error messages
-COLOR_SUCCESS: str = "#4ECDC4"  # success / connected indicator
-COLOR_BORDER: str = "#1E3550"  # subtle border / separator
+# ── Graphical Themes ──────────────────────────────────────────────
+COLOR_BG_DARK: str = "#0D1B2A"
+COLOR_BG_PANEL: str = "#112233"
+COLOR_BG_ROW_ALT: str = "#0A1828"
+COLOR_ACCENT: str = "#F5C842"
+COLOR_FG_PRIMARY: str = "#FFFFFF"
+COLOR_FG_MUTED: str = "#8BAABE"
+COLOR_ERROR: str = "#FF5C5C"
+COLOR_SUCCESS: str = "#4ECDC4"
+COLOR_BORDER: str = "#1E3550"
 
-FONT_FAMILY: str = "JetBrainsMonoNerdFont"  # falls back gracefully on non-Windows
+# FONT_FAMILY: str = "JetBrainsMonoNerdFont"
+FONT_FAMILY: str = "Roboto"
 FONT_SIZE_BODY: int = 10
 FONT_SIZE_LABEL: int = 9
 FONT_SIZE_TITLE: int = 16
 FONT_SIZE_SUBTITLE: int = 12
 
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
-APP_TITLE: str = "Fleet Monitor — Certificate Dashboard"
-WINDOW_WIDTH: int = 1100
-WINDOW_HEIGHT: int = 680
-WINDOW_MIN_WIDTH: int = 900
-WINDOW_MIN_HEIGHT: int = 560
+# ── Window Structural Boundaries ────────────────────────────────
+APP_TITLE: str = "RoadSmart Speed Tracker — Administration Terminal"
+WINDOW_WIDTH: int = 1280
+WINDOW_HEIGHT: int = 760
+WINDOW_MIN_WIDTH: int = 1024
+WINDOW_MIN_HEIGHT: int = 640
