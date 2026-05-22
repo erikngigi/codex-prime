@@ -63,10 +63,11 @@ class FleetController:
             fleet_page = FleetPage.fetch_combined_fleet(session, limit=self.page_size, search=query)
 
             if query:
+                normalized_query = query.upper().strip()
                 # Isolate the exact matching asset out of the parsed return page list
                 matched_asset = None
                 for asset in fleet_page.assets:
-                    if asset.vehicle_registration == query.upper().strip():
+                    if asset.vehicle_registration == normalized_query or asset.limiter_serial == normalized_query:
                         matched_asset = asset
                         break
 

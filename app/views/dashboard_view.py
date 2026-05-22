@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class DashboardView(tk.Frame):
-    """Detailed vehicle overview dashboard panel using a multi-column information block schema."""
+    """Detailed vehicle overview dashboard panel using an adaptive single-column schema."""
 
     def __init__(self, parent: tk.Misc, controller: FleetController) -> None:
         super().__init__(parent, bg=config.COLOR_BG_DARK)
@@ -43,21 +43,6 @@ class DashboardView(tk.Frame):
         )
         self._user_label.pack(side="left", padx=15)
 
-        self._logout_btn = tk.Button(
-            self._top_panel,
-            text="LOGOUT",
-            bg=config.COLOR_BORDER,
-            fg=config.COLOR_ERROR,
-            activebackground=config.COLOR_BG_DARK,
-            activeforeground=config.COLOR_ERROR,
-            font=(config.FONT_FAMILY, config.FONT_SIZE_LABEL, "bold"),
-            bd=0,
-            cursor="hand2",
-            padx=12,
-            command=self._on_logout,
-        )
-        self._logout_btn.pack(side="right", padx=15)
-
         self._quit_btn = tk.Button(
             self._top_panel,
             text="EXIT",
@@ -71,10 +56,25 @@ class DashboardView(tk.Frame):
             padx=12,
             command=self._on_quit,
         )
-        self._quit_btn.pack(side="right", padx=(15, 0))
+        self._quit_btn.pack(side="right", padx=15)
+
+        self._logout_btn = tk.Button(
+            self._top_panel,
+            text="LOGOUT",
+            bg=config.COLOR_BORDER,
+            fg=config.COLOR_ERROR,
+            activebackground=config.COLOR_BG_DARK,
+            activeforeground=config.COLOR_ERROR,
+            font=(config.FONT_FAMILY, config.FONT_SIZE_LABEL, "bold"),
+            bd=0,
+            cursor="hand2",
+            padx=12,
+            command=self._on_logout,
+        )
+        self._logout_btn.pack(side="right", padx=(15, 0))
 
         self._copy_btn = tk.Button(
-            self._top_panel,  # or wherever your action button controls reside
+            self._top_panel,
             text="📋 COPY VALUES",
             command=self._on_copy_to_clipboard,
             bg=config.COLOR_BG_DARK,
@@ -84,36 +84,23 @@ class DashboardView(tk.Frame):
             font=(config.FONT_FAMILY, config.FONT_SIZE_LABEL, "bold"),
             relief="flat",
             padx=10,
-            state="disabled",  # Disabled by default until a vehicle search succeeds
+            state="disabled",
         )
         self._copy_btn.pack(side="right", padx=5, pady=10)
 
-        # ── MAIN WORKSPACE CONTAINER (3-COLUMN SPLIT) ──
+        # ── ADAPTIVE WORKSPACE CONTAINER ──
+        # Replaced the 3-column split with a clean, centered single-column layout
         workspace_container = tk.Frame(self, bg=config.COLOR_BG_DARK)
         workspace_container.pack(fill="both", expand=True, padx=15, pady=5)
 
-        # 1. Left Sidebar Column Frame (Reserved Space)
-        self.left_column = tk.Frame(workspace_container, bg=config.COLOR_BG_DARK, width=250)
-        self.left_column.pack(side="left", fill="y", padx=(0, 10))
-        self.left_column.pack_propagate(False)
-
-        # 2. Right Sidebar Column Frame (Reserved Space)
-        self.right_column = tk.Frame(workspace_container, bg=config.COLOR_BG_DARK, width=250)
-        self.right_column.pack(side="right", fill="y", padx=(10, 0))
-        self.right_column.pack_propagate(False)
-
-        # 3. Center Dashboard Column Frame (Contains Scrollable Canvas Workspace)
-        center_column = tk.Frame(workspace_container, bg=config.COLOR_BG_DARK)
-        center_column.pack(side="left", fill="both", expand=True)
-
-        # Scrollbar widget removed; canvas expanded to take full layout width
-        canvas = tk.Canvas(center_column, bg=config.COLOR_BG_DARK, bd=0, highlightthickness=0)
+        canvas = tk.Canvas(workspace_container, bg=config.COLOR_BG_DARK, bd=0, highlightthickness=0)
         self._scrollable_frame = tk.Frame(canvas, bg=config.COLOR_BG_DARK)
 
         self._scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         self._canvas_window_id = canvas.create_window((0, 0), window=self._scrollable_frame, anchor="nw")
 
         def _on_canvas_resize(event):
+            # Keeps the scrollable inner content bound directly to the canvas window width bounds
             canvas.itemconfig(self._canvas_window_id, width=event.width)
 
         canvas.bind("<Configure>", _on_canvas_resize)
@@ -121,21 +108,20 @@ class DashboardView(tk.Frame):
 
         # ── MOUSE WHEEL GESTURE BINDINGS ──
         def _on_mouse_wheel(event):
-            # Handles Windows and macOS systems
             if event.num == 5 or event.delta < 0:
                 canvas.yview_scroll(1, "units")
             elif event.num == 4 or event.delta > 0:
                 canvas.yview_scroll(-1, "units")
 
-        # Bind event to canvas and recursively to all elements nested within it
-        canvas.bind_all("<MouseWheel>", _on_mouse_wheel)  # Windows / macOS
-        canvas.bind_all("<Button-4>", _on_mouse_wheel)  # Linux scroll up
-        canvas.bind_all("<Button-5>", _on_mouse_wheel)  # Linux scroll down
+        canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+        canvas.bind_all("<Button-4>", _on_mouse_wheel)
+        canvas.bind_all("<Button-5>", _on_mouse_wheel)
 
         # ── SEARCH CONTROL BLOCK ──
         search_outer = tk.Frame(self._scrollable_frame, bg=config.COLOR_BG_PANEL, pady=8)
-        search_outer.pack(pady=(0, 10), anchor="center")
-        search_frame = tk.Frame(search_outer, bg=config.COLOR_BG_PANEL, padx=12)
+        search_outer.pack(pady=(0, 10), fill="x", padx=10)  # Fills horizontal space smoothly
+
+        search_frame = tk.Frame(search_outer, bg=config.COLOR_BG_PANEL)
         search_frame.pack(anchor="center")
 
         tk.Label(
@@ -156,9 +142,9 @@ class DashboardView(tk.Frame):
             font=(config.FONT_FAMILY, config.FONT_SIZE_BODY),
             bd=1,
             relief="solid",
-            width=16,
+            width=22,
         )
-        self._search_entry.pack(side="left", padx=5, ipady=1)
+        self._search_entry.pack(side="left", padx=5, ipady=3)
         self._search_entry.bind("<Return>", lambda e: self._on_search_submit())
 
         self._search_btn = tk.Button(
@@ -176,7 +162,7 @@ class DashboardView(tk.Frame):
         )
         self._search_btn.pack(side="left", padx=10)
 
-        # ── CONSOLIDATED UNIFIED DATA LAYOUT BLOCK ──
+        # ── CONSOLIDATED DATA CARD BLOCK ──
         vehicle_details = self._create_section_card(" Vehicle Reset Details ")
 
         self._add_row(vehicle_details, "Limiter Serial No:", "limiter_serial", 0)
@@ -189,13 +175,13 @@ class DashboardView(tk.Frame):
         self._add_row(vehicle_details, "Vehicle Certificate Number:", "certificate_number", 7)
         self._add_row(vehicle_details, "Vehicle Limiter Type:", "limiter_type", 8)
         self._add_row(vehicle_details, "Certificate Issue Date:", "issue_date", 9)
-        self._add_row(vehicle_details, "Certificate Expiry Date", "expiry_date", 10)
-        self._add_row(vehicle_details, "Installation Location", "installation_location", 11)
+        self._add_row(vehicle_details, "Certificate Expiry Date:", "expiry_date", 10)
+        self._add_row(vehicle_details, "Installation Location:", "installation_location", 11)
         self._add_row(vehicle_details, "Installation Agent ID:", "agent_id", 12)
-        self._add_row(vehicle_details, "Company Location", "company_location", 13)
-        self._add_row(vehicle_details, "Company Email Address", "company_email", 14)
-        self._add_row(vehicle_details, "Company Phone Number", "company_phone_number", 15)
-        self._add_row(vehicle_details, "Company Street Address", "company_street_address", 16)
+        self._add_row(vehicle_details, "Company Location:", "company_location", 13)
+        self._add_row(vehicle_details, "Company Email Address:", "company_email", 14)
+        self._add_row(vehicle_details, "Company Phone Number:", "company_phone_number", 15)
+        self._add_row(vehicle_details, "Company Street Address:", "company_street_address", 16)
         self._add_row(vehicle_details, "Speed Threshold:", "speed_threshold", 17)
         self._add_row(vehicle_details, "Fitting Technician Name:", "fitting_technician_nickname", 18)
 
@@ -214,7 +200,7 @@ class DashboardView(tk.Frame):
         self._status_label.pack(side="left")
 
     def _create_section_card(self, section_title: str) -> tk.LabelFrame:
-        """Helper to safely build UI card modules."""
+        """Helper to build layout cards that dynamically expand horizontally."""
         card = tk.LabelFrame(
             self._scrollable_frame,
             text=section_title,
@@ -225,25 +211,21 @@ class DashboardView(tk.Frame):
             pady=15,
             bd=1,
             relief="solid",
-            width=760,
         )
-        card.pack(pady=8, anchor="center")
-        card.pack_propagate(False)
+        # Changed anchor="center" and explicit width configurations to layout-responsive configurations
+        card.pack(pady=8, padx=10, fill="x", expand=True)
+        card.columnconfigure(0, weight=1)
         return card
 
-    _CELL_WIDTH: int = 28
-
     def _add_row(self, parent: tk.Widget, visual_label: str, mapping_key: str, grid_row: int) -> None:
-        """Helper to map a data metric label dynamically to a manageable dictionary object."""
-        parent.columnconfigure(0, weight=1)
-
+        """Helper mapping grid values into flexible percentage-based table items."""
         row_outer = tk.Frame(parent, bg=config.COLOR_BG_PANEL)
-        row_outer.grid(row=grid_row, column=0, pady=4, padx=10)
+        row_outer.grid(row=grid_row, column=0, pady=4, padx=5, sticky="ew")
 
-        row_outer.columnconfigure(0, weight=1, uniform="matrix_row")
-        row_outer.columnconfigure(1, weight=1, uniform="matrix_row")
+        # Configurations map columns evenly to split screen 50/50 cleanly across responsive frame modifications
+        row_outer.columnconfigure(0, weight=1, uniform="dashboard_grid")
+        row_outer.columnconfigure(1, weight=1, uniform="dashboard_grid")
 
-        # Key cell container frame
         key_frame = tk.Frame(row_outer, bg=config.COLOR_BG_PANEL, bd=1, relief="solid")
         key_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 2))
 
@@ -254,11 +236,9 @@ class DashboardView(tk.Frame):
             fg=config.COLOR_FG_MUTED,
             font=(config.FONT_FAMILY, config.FONT_SIZE_BODY, "bold"),
             anchor="w",
-            width=self._CELL_WIDTH,
         )
         lbl.pack(padx=12, pady=6, fill="both", expand=True)
 
-        # Value cell container frame
         val_frame = tk.Frame(row_outer, bg=config.COLOR_BG_PANEL, bd=1, relief="solid")
         val_frame.grid(row=0, column=1, sticky="nsew", padx=(2, 0))
 
@@ -272,17 +252,10 @@ class DashboardView(tk.Frame):
             fg=config.COLOR_FG_PRIMARY,
             font=(config.FONT_FAMILY, config.FONT_SIZE_BODY),
             anchor="center",
-            width=self._CELL_WIDTH,
-            wraplength=210,
+            wraplength=400,  # Increased wrapping length capacity to fit max-width setups perfectly
             justify="center",
         )
         val_display.pack(padx=12, pady=6, fill="both", expand=True)
-
-        parent.update_idletasks()
-        current_parent_height = parent.cget("height") or 0
-        calculated_row_height = max(lbl.winfo_reqheight(), val_display.winfo_reqheight()) + 14
-
-        parent.config(height=max(current_parent_height, (grid_row + 1) * (calculated_row_height + 8) + 40))
 
     def show(self, session: AuthSession) -> None:
         self._session = session
@@ -290,7 +263,7 @@ class DashboardView(tk.Frame):
         self.lift()
         self.place(relx=0, rely=0, relwidth=1, relheight=1)
         self.clear_fields()
-        self._status_var.set("Ready. Input a unique registration index to look up detailed certificate profiles.")
+        self._status_var.set("Ready. Input a registration code or limiter serial to view metadata profiles.")
 
     def hide(self) -> None:
         self.place_forget()
@@ -326,7 +299,7 @@ class DashboardView(tk.Frame):
     def _on_search_submit(self) -> None:
         query = self._search_var.get().strip()
         if not query:
-            self._status_var.set("! Validation Error: Target registration text query field cannot be left blank.")
+            self._status_var.set("! Validation Error: Target text query field cannot be left blank.")
             return
         self._controller.search_by_registration(query)
 
@@ -337,15 +310,13 @@ class DashboardView(tk.Frame):
         self._controller.coordinator.force_quit()
 
     def set_parenthesis_payload(self, raw_string: str) -> None:
-        """Saves incoming bracket data text string streams and activates copy actions."""
         self._raw_parenthesis_data = raw_string
         if raw_string:
-            self._copy_btn.config(state="normal")  # Make button clickable now!
+            self._copy_btn.config(state="normal")
         else:
             self._copy_btn.config(state="disabled")
 
     def _on_copy_to_clipboard(self) -> None:
-        """Pushes current cached data payload straight onto the system copy clipboard."""
         if not self._raw_parenthesis_data:
             self._status_var.set("! Clipboard Error: No active system profile records loaded.")
             return
@@ -353,7 +324,6 @@ class DashboardView(tk.Frame):
         try:
             self.clipboard_clear()
             self.clipboard_append(self._raw_parenthesis_data)
-            # Update status message to give immediate confirmation back to user
             self._status_var.set("✔ Success: Parenthesis asset string values copied to clipboard!")
         except Exception as e:
             self._status_var.set(f"! Hardware Fault: Failed to interact with OS clipboard: {e}")
