@@ -23,7 +23,7 @@ jobs:
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
       - name: Build Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --paths=app --name="VehicleDashboard" app/main.py
+          pyinstaller --noconfirm --onefile --windowed --paths=. --name="VehicleDashboard" app/main.py
         # --onefile: Bundles everything into a single executable
         # --windowed: Prevents a blank console window from popping up (ideal for GUI apps)
         # --paths=app: Helps PyInstaller resolve your local imports (controllers, models, views)
