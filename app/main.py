@@ -4,6 +4,18 @@ app/main.py — Application primary launcher bootstrap entry hook file.
 
 from __future__ import annotations
 
+import os
+import sys
+
+# --- BOOTSTRAP PATH FIX ---
+# This calculates the absolute path to the folder above 'app'
+# so Python can resolve the 'from app.xyz' imports cleanly.
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(CURRENT_DIR)
+if PARENT_DIR not in sys.path:
+    sys.path.insert(0, PARENT_DIR)
+# --------------------------
+
 import logging
 
 from app.controllers.auth_controller import AuthController
