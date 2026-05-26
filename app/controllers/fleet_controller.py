@@ -5,6 +5,8 @@ app/controllers/fleet_controller.py — Unified Fleet Operational Sub-Controller
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from app.models.api_client import APIError, UnauthorizedError
@@ -90,13 +92,58 @@ class FleetController:
             if hasattr(self.coordinator.dashboard_view, "populate"):
                 self.coordinator.dashboard_view.populate(page)
 
+    def _log_vehicle_search(self, asset: Any) -> None:
+        """Appends a timestamped search record to the audit log at the project root."""
+        log_path = Path(__file__).resolve().parents[2] / "vehicle_search.log"
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with log_path.open("a", encoding="utf-8") as log_file:
+            log_file.write(f"[{timestamp}]\n")
+            log_file.write(f"vehicle_registration : {asset.vehicle_registration}\n")
+            log_file.write(f"certificate_number   : {asset.certificate_number}\n")
+            log_file.write(f"issue_date           : {asset.issue_date}\n")
+            log_file.write(f"expiry_date          : {asset.expiry_date}\n")
+            log_file.write("-" * 40 + "\n")
+        logger.debug(f"Vehicle search logged to {log_path}")
+
     def _on_match_success(self, asset: Any) -> None:
         """Runs on the main GUI thread when a single specific record matches successfully."""
         if self.coordinator.dashboard_view:
             self.coordinator.dashboard_view.set_loading(False)
+            self._log_vehicle_search(asset)
 
-            # Packs the payload variables seamlessly to feed your dashboard layout's string mappings
-            export_payload = {
+            clipboard_payload = {
+                "limiter_serial": asset.limiter_serial,
+                "hardcoded_1": asset.hardcoded_1,
+                "hardcoded_2": asset.hardcoded_2,
+                "hardcoded_3": asset.hardcoded_3,
+                "hardcoded_4": asset.hardcoded_4,
+                "owner_name": "",  # Empty
+                "official_id": "",  # Empty
+                "telephone1": "",  # Empty
+                "vehicle_registration": "",  # Empty
+                "chassis_number": "",  # Empty
+                "vehicle_make_n_type": "",  # Empty
+                "certificate_number": asset.certificate_number,
+                "limiter_type": "",  # Empty
+                "empty_placeholder_field": "",  # Empty slot after limiter type
+                "issue_date": asset.issue_date,
+                "installation_location": asset.installation_location,
+                "agent_id": asset.agent_id,
+                "company_location": "",  # Empty
+                "company_email": "",  # Empty
+                "company_phone_number": "",  # Empty
+                "company_street_address": "",  # Empty
+                "expiry_date": asset.expiry_date,
+                "speed_threshold": asset.speed_threshold,
+                "fitting_technician_nickname": asset.fitting_technician_nickname,
+            }
+
+            raw_string_values = [str(val).strip() for val in clipboard_payload.values()]
+            formatted_parenthesis_string = f"({','.join(raw_string_values)})"
+
+            self.coordinator.dashboard_view.set_parenthesis_payload(formatted_parenthesis_string)
+
+            ui_payload = {
                 "limiter_serial": asset.limiter_serial,
                 "hardcoded_1": asset.hardcoded_1,
                 "hardcoded_2": asset.hardcoded_2,
@@ -122,13 +169,8 @@ class FleetController:
                 "fitting_technician_nickname": asset.fitting_technician_nickname,
             }
 
-            raw_string_values = [str(val).strip() for val in export_payload.values()]
-            formatted_parenthesis_string = f"({','.join(raw_string_values)})"
-
-            self.coordinator.dashboard_view.set_parenthesis_payload(formatted_parenthesis_string)
-
             if hasattr(self.coordinator.dashboard_view, "populate_profile"):
-                self.coordinator.dashboard_view.populate_profile(export_payload)
+                self.coordinator.dashboard_view.populate_profile(ui_payload)
 
     def _on_fleet_failure(self, message: str) -> None:
         """Handles background process failures safely on the main UI execution loop."""
