@@ -5,7 +5,6 @@ app/controllers/fleet_controller.py — Unified Fleet Operational Sub-Controller
 from __future__ import annotations
 
 import logging
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -95,14 +94,8 @@ class FleetController:
 
     def _log_vehicle_search(self, asset: Any) -> None:
         """Appends a timestamped search record to the audit log at the project root."""
-        if getattr(sys, "frozen", False):
-            base_dir = Path(sys.executable).parent
-        else:
-            base_dir = Path(__file__).resolve().parents[2]
-
-        log_path = base_dir / "vehicle_search.log"
+        log_path = Path(__file__).resolve().parents[2] / "vehicle_search.log"
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         with log_path.open("a", encoding="utf-8") as log_file:
             log_file.write(f"[{timestamp}]\n")
             log_file.write(f"vehicle_registration : {asset.vehicle_registration}\n")
