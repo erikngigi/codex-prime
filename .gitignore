@@ -43,6 +43,3 @@ htmlcov/
 
 # SQL files
 *.sql
-
-# Exclude executables
-*.exe
